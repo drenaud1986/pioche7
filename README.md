@@ -7,8 +7,10 @@ Jeu de cartes « stop ou encore » pour mobile : tu joues contre 3 robots et tu 
 | Fichier | Rôle |
 |---|---|
 | `index.html` | Structure de l'écran (table, menu, accueil) |
-| `css/style.css` | Tout le visuel : tapis, cartes, boutons, animations |
+| `css/style.css` | Base du visuel : cartes, boutons, mise en page, animations |
+| `css/theme.css` | Thème « soirée jeux » : nuit étoilée, tapis vert, pop-ups à ruban, podium |
 | `js/engine.js` | Règles du jeu, scores et intelligence des robots (sans affichage) |
+| `js/avatars.js` | Personnages illustrés (Toi, Zoé, Hugo, Lina) et leurs expressions |
 | `js/app.js` | Interface, animations, sons, sauvegarde, journal, historique |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur le téléphone et mode hors ligne |
 | `tools/serve.js` | Petit serveur local pour tester sur l'ordinateur |
