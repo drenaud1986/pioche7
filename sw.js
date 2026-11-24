@@ -1,7 +1,7 @@
 /* Service worker : tout le jeu est mis en cache pour jouer hors ligne */
-const CACHE = 'pioche7-v1';
+const CACHE = 'pioche7-v2';
 const FILES = [
-  './', './index.html', './css/style.css', './js/engine.js', './js/app.js', './manifest.webmanifest',
+  './', './index.html', './css/style.css', './css/theme.css', './js/engine.js', './js/avatars.js', './js/app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
 ];
 self.addEventListener('install', e => {

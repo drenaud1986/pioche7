@@ -13,6 +13,7 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
   <div id="app">
@@ -21,12 +22,14 @@
         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <div class="brand">PIOCHE<span>7</span></div>
-      <div class="roundinfo"><span>Manche <b id="roundNo">1</b></span><small>Objectif 200</small></div>
+      <div class="goal"><svg viewBox="0 0 100 100" class="goal-ic"><path d="M28 12h44v22a22 22 0 0 1-44 0z" fill="#f6c945" stroke="#a16207" stroke-width="5"/><path d="M28 18H14c0 16 8 24 18 24M72 18h14c0 16-8 24-18 24" fill="none" stroke="#f6c945" stroke-width="6"/><rect x="44" y="56" width="12" height="16" fill="#e0a526"/><rect x="30" y="72" width="40" height="12" rx="3" fill="#f6c945"/></svg><span><small>OBJECTIF</small><b>200 PTS</b></span></div>
     </header>
 
     <section id="opponents"></section>
 
     <section id="table">
+      <div class="round-chip">Manche <b id="roundNo">1</b></div>
+      <div class="felt-sparkles"></div>
       <div class="pile" id="deckPile">
         <div class="stack"></div>
         <div id="deckTop" class="card back"></div>
@@ -42,10 +45,9 @@
 
     <section id="me" class="me-zone" data-i="0">
       <div class="me-head">
-        <span class="ava">🙂</span>
+        <div id="meAva" class="me-ava"></div>
         <span class="pname">Toi</span>
         <span id="meBadge" class="badge"></span>
-        <span id="meDealer" class="dealer-chip" hidden>D</span>
         <div class="me-scores">
           <div class="sc"><small>MANCHE</small><b id="meRound">0</b></div>
           <div class="sc total"><small>TOTAL</small><b id="meTotal">0</b></div>
@@ -104,6 +106,7 @@
       <div class="home-inner">
         <div class="home-fan" id="homeFan"></div>
         <h1 class="home-title">PIOCHE<span>7</span></h1>
+        <div class="home-crew" id="homeCrew"></div>
         <p class="home-tag">Stop ou encore ? Aligne 7 numéros différents sans doublon !</p>
         <div class="home-box">
           <div class="dr-label">Niveau des robots</div>
@@ -120,6 +123,7 @@
   </div>
 
   <script src="js/engine.js"></script>
+  <script src="js/avatars.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
