@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0b4a2e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Jeu de cartes « stop ou encore » : atteins 7 numéros différents sans doublon.">
+  <title>Pioche 7</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="btnMenu" class="icon-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="brand">PIOCHE<span>7</span></div>
+      <div class="roundinfo"><span>Manche <b id="roundNo">1</b></span><small>Objectif 200</small></div>
+    </header>
+
+    <section id="opponents"></section>
+
+    <section id="table">
+      <div class="pile" id="deckPile">
+        <div class="stack"></div>
+        <div id="deckTop" class="card back"></div>
+        <span class="pile-label">Pioche <b id="deckCount">94</b></span>
+      </div>
+      <div id="status" class="status-msg">Bienvenue !</div>
+      <div class="pile" id="discardPile">
+        <div id="discardTop" class="slot-empty"></div>
+        <span class="pile-label">Défausse <b id="discardCount">0</b></span>
+      </div>
+      <div id="toast" class="toast"></div>
+    </section>
+
+    <section id="me" class="me-zone" data-i="0">
+      <div class="me-head">
+        <span class="ava">🙂</span>
+        <span class="pname">Toi</span>
+        <span id="meBadge" class="badge"></span>
+        <span id="meDealer" class="dealer-chip" hidden>D</span>
+        <div class="me-scores">
+          <div class="sc"><small>MANCHE</small><b id="meRound">0</b></div>
+          <div class="sc total"><small>TOTAL</small><b id="meTotal">0</b></div>
+        </div>
+      </div>
+      <div class="me-sub"><span id="meProgress">0/7 numéros</span><span id="meDetail"></span></div>
+      <div id="meNums" class="row nums" data-zone="0-n"></div>
+      <div id="meSpecs" class="row specs" data-zone="0-s"></div>
+      <div class="actions">
+        <button id="btnStay" class="btn-big btn-stay" disabled>
+          <svg viewBox="0 0 24 24" class="bi"><path d="M7.5 3h9L21 7.5v9L16.5 21h-9L3 16.5v-9z" fill="currentColor" opacity=".25"/><path d="M7.5 3h9L21 7.5v9L16.5 21h-9L3 16.5v-9z"/><path d="M9.5 15.5v-6m2.5 6v-7m2.5 7v-6M8 13l1.5 2.5"/></svg>
+          <span>ARRÊTER</span>
+        </button>
+        <button id="btnHit" class="btn-big btn-hit" disabled>
+          <svg viewBox="0 0 24 24" class="bi"><rect x="4" y="5" width="11" height="15" rx="2" fill="currentColor" opacity=".25"/><rect x="4" y="5" width="11" height="15" rx="2"/><path d="M9 3.5h8.5a2 2 0 0 1 2 2V17"/><path d="M9.5 10v5m-2.5-2.5h5"/></svg>
+          <span>PIOCHER</span>
+        </button>
+      </div>
+    </section>
+
+    <div id="fxLayer"></div>
+    <div id="revealDim"></div>
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Menu latéral -->
+    <div id="drawerBack"></div>
+    <nav id="drawer" aria-label="Menu">
+      <div class="drawer-head">
+        <div class="brand">PIOCHE<span>7</span></div>
+        <button class="icon-btn" data-act="closeMenu" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <button class="dr-item" data-act="closeMenu">▶️ Reprendre le jeu</button>
+      <button class="dr-item" data-act="newGame">🔄 Nouvelle partie</button>
+      <div class="dr-group">
+        <div class="dr-label">Niveau des robots</div>
+        <div class="seg" id="segDiff">
+          <button data-diff="facile">Facile</button><button data-diff="moyen">Moyen</button><button data-diff="difficile">Difficile</button>
+        </div>
+      </div>
+      <div class="dr-group">
+        <div class="dr-label">Vitesse des animations</div>
+        <div class="seg" id="segSpeed">
+          <button data-speed="normal">Normale</button><button data-speed="rapide">Rapide</button>
+        </div>
+      </div>
+      <button class="dr-item" data-act="toggleSound" id="soundItem">🔊 Son : activé</button>
+      <button class="dr-item" data-act="log">📜 Journal de la partie</button>
+      <button class="dr-item" data-act="history">🏆 Scores des dernières parties</button>
+      <button class="dr-item" data-act="rules">📖 Règles du jeu</button>
+      <button class="dr-item" data-act="home">🏠 Écran d'accueil</button>
+      <div class="dr-foot">Sauvegarde automatique · Fonctionne hors ligne</div>
+    </nav>
+
+    <!-- Accueil -->
+    <section id="home">
+      <div class="home-inner">
+        <div class="home-fan" id="homeFan"></div>
+        <h1 class="home-title">PIOCHE<span>7</span></h1>
+        <p class="home-tag">Stop ou encore ? Aligne 7 numéros différents sans doublon !</p>
+        <div class="home-box">
+          <div class="dr-label">Niveau des robots</div>
+          <div class="seg big" id="homeDiff">
+            <button data-diff="facile">😊<br>Facile</button><button data-diff="moyen">🙂<br>Moyen</button><button data-diff="difficile">😈<br>Difficile</button>
+          </div>
+        </div>
+        <button id="btnResume" class="home-btn resume" hidden>▶ Reprendre la partie</button>
+        <button id="btnNew" class="home-btn">🃏 Nouvelle partie</button>
+        <button id="btnHomeRules" class="home-link">📖 Règles du jeu</button>
+        <button id="btnInstall" class="home-link" hidden>📲 Installer l'application</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
