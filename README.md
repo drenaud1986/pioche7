@@ -2,6 +2,8 @@
 
 Jeu de cartes « stop ou encore » pour mobile : tu joues contre 3 robots et tu essaies d'aligner 7 numéros différents sans tirer de doublon. C'est une application web installable (PWA) : plein écran, hors ligne, sauvegarde automatique.
 
+Deux versions au choix (menu ou accueil, « Version ») : **Normale** et **Vengeance** (malus et coups bas). Dans le menu, « Mon profil » permet de choisir ton nom et ton avatar parmi 9 personnages.
+
 ## Contenu
 
 | Fichier | Rôle |
@@ -9,8 +11,9 @@ Jeu de cartes « stop ou encore » pour mobile : tu joues contre 3 robots et tu 
 | `index.html` | Structure de l'écran (table, menu, accueil) |
 | `css/style.css` | Base du visuel : cartes, boutons, mise en page, animations |
 | `css/theme.css` | Thème « soirée jeux » : nuit étoilée, tapis vert, pop-ups à ruban, podium |
-| `js/engine.js` | Règles du jeu, scores et intelligence des robots (sans affichage) |
-| `js/avatars.js` | Personnages illustrés (Toi, Zoé, Hugo, Lina) et leurs expressions |
+| `css/vengeance.css` | Cartes de la version Vengeance, choix de carte, écran de profil |
+| `js/engine.js` | Règles des deux versions, scores et intelligence des robots (sans affichage) |
+| `js/avatars.js` | Personnages illustrés (les 3 robots et 9 avatars au choix) et leurs expressions |
 | `js/app.js` | Interface, animations, sons, sauvegarde, journal, historique |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur le téléphone et mode hors ligne |
 | `tools/serve.js` | Petit serveur local pour tester sur l'ordinateur |
@@ -50,6 +53,21 @@ Ensuite, sur le téléphone, dans Chrome : menu ⋮ → **Installer l'applicatio
 - Score : somme des numéros, ×2 si la carte ×2, + bonus, +15 pour 7 numéros différents (la manche s'arrête aussitôt).
 - La partie se termine à la fin de la manche où quelqu'un atteint 200 points ; le plus haut total gagne (en cas d'égalité en tête, on joue une manche de plus).
 - La pioche n'est pas remélangée entre les manches : la défausse ne revient que quand la pioche est vide.
+
+## Règles de la version Vengeance
+
+D'après la règle de « Flip 7: With a Vengeance » (The Op), publiée en français sous le nom « Flip 7 Vengeance ». Les noms français des cartes spéciales sont des traductions maison.
+
+- 108 cartes : numéros 0 à 13 (autant d'exemplaires que la valeur, un seul 0), malus −2/−4/−6/−8/−10 et ÷2, et 2 exemplaires de chaque action : ENCORE UNE !, QUATRE À LA SUITE, VOL, ÉCHANGE, DÉFAUSSE.
+- S'arrêter ne protège pas : un joueur arrêté peut encore être visé jusqu'à la fin de la manche. Seuls les joueurs éliminés sont hors d'atteinte.
+- **Zéro maudit** (le 0) : score de manche à 0 sauf avec 7 numéros ; tant qu'on l'a, on ne peut pas s'arrêter.
+- **7 de la malchance** (un des 7) : défausse toutes les autres cartes (numéros et malus) de celui qui le reçoit ; il ne fait jamais sauter.
+- **13 porte-bonheur** (un des 13) : autorise deux 13 (les deux comptent) ; un troisième fait sauter.
+- Malus : celui qui le pioche le donne à un joueur non éliminé (à lui-même seulement s'il est seul).
+- ENCORE UNE ! : la cible pioche 1 carte puis doit s'arrêter. QUATRE À LA SUITE : la cible pioche 4 cartes ; actions et malus tirés sont joués ensuite, dans l'ordre, sauf si elle a sauté ou fait 7 numéros.
+- VOL : prendre une carte devant un adversaire. ÉCHANGE : échanger deux cartes de deux joueurs différents. DÉFAUSSE : retirer une carte de n'importe quel joueur non éliminé. Un doublon créé ainsi fait sauter. Sans cible possible, la carte est défaussée.
+- Score : somme des numéros → ÷2 arrondi en dessous → − malus → minimum 0 → +15 pour 7 numéros.
+- Non repris : le mode optionnel « Brutal » de la règle.
 
 ## Robots
 

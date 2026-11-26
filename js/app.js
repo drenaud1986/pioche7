@@ -1,16 +1,18 @@
 /* Pioche 7 — interface, animations, sauvegarde */
 (() => {
   'use strict';
-  const { WORDS, TARGET, FLIP7_BONUS, roundScore, uniqueCount, hasX2, shuffle } = P7;
-  const { avatarSVG } = P7Avatars;
+  const { WORDS, TARGET, FLIP7_BONUS, roundScore, uniqueCount, hasX2, hasDiv, hasZero, shuffle } = P7;
+  const { avatarSVG, CHARS, PLAYER_CHOICES } = P7Avatars;
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
-  const COLORS = ['#6b7280', '#b7791f', '#65a30d', '#db2777', '#0891b2', '#16a34a', '#7c3aed', '#dc2626', '#2563eb', '#ea580c', '#be185d', '#0f766e', '#1e3a8a'];
+  const COLORS = ['#6b7280', '#b7791f', '#65a30d', '#db2777', '#0891b2', '#16a34a', '#7c3aed', '#dc2626', '#2563eb', '#ea580c', '#be185d', '#0f766e', '#1e3a8a', '#9333ea'];
   const BOTS = [{ name: 'Zoé', avatar: 'zoe' }, { name: 'Hugo', avatar: 'hugo' }, { name: 'Lina', avatar: 'lina' }];
   const LEGACY = { '🙂': 'me', '🦊': 'zoe', '🐻': 'hugo', '🐼': 'lina' };
   const PCOLOR = { me: '#f6c945', zoe: '#f472b6', hugo: '#34d399', lina: '#c084fc' };
+  const pcol = k => PCOLOR[k] || (CHARS[k] && CHARS[k].bg) || '#fff';
   const DIFF = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
+  const MODES = { normal: 'Normale', vengeance: 'Vengeance' };
   const SPEEDS = {
     normal: { fly: 420, hold: 1000, think: 650, toast: 1400, banner: 1400, auto: 2600 },
     rapide: { fly: 260, hold: 520, think: 300, toast: 850, banner: 900, auto: 1700 },
@@ -23,6 +25,8 @@
     three: ['Pioche donc 3 cartes !', 'À toi de risquer !', 'Bonne chance !'],
     saved: ['Ouf !', 'Sauvé !', 'De justesse !'],
     seven: ['SEPT !!!', 'Incroyable !', 'Yesss !'],
+    mean: ['Cadeau empoisonné !', 'Tiens, pour toi !', 'Désolé pas désolé !', 'Hé hé hé…', 'Vengeance !'],
+    steal: ['Merci bien !', 'Je prends ça !', 'C\'est à moi maintenant !'],
   };
   const pick = a => a[Math.floor(Math.random() * a.length)];
 
@@ -31,7 +35,8 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } },
     del(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
   };
-  const settings = Object.assign({ difficulty: 'moyen', speed: 'normal', sound: true }, store.get('p7_settings', {}));
+  const settings = Object.assign({ difficulty: 'moyen', speed: 'normal', sound: true, mode: 'normal', name: '', avatar: 'me' }, store.get('p7_settings', {}));
+  if (!PLAYER_CHOICES.includes(settings.avatar)) settings.avatar = 'me';
   const SPD = () => SPEEDS[settings.speed] || SPEEDS.normal;
   const saveSettings = () => store.set('p7_settings', settings);
 
@@ -104,10 +109,27 @@
     three: '<svg viewBox="0 0 100 100" class="icon"><g stroke="#1d2433" stroke-width="3.5" stroke-linejoin="round"><rect x="14" y="24" width="36" height="52" rx="6" fill="#fffaf0" transform="rotate(-20 32 50)"/><rect x="50" y="24" width="36" height="52" rx="6" fill="#fffaf0" transform="rotate(20 68 50)"/><rect x="32" y="18" width="36" height="52" rx="6" fill="#fff"/></g><text x="50" y="57" text-anchor="middle" font-family="Roboto,Arial,sans-serif" font-size="34" font-weight="900" fill="#e0a10d" stroke="#1d2433" stroke-width="2.5" paint-order="stroke">3</text></svg>',
     second: '<svg viewBox="0 0 100 100" class="icon"><path d="M50 88C19 67 6 51 6 33a21 21 0 0 1 44-10 21 21 0 0 1 44 10c0 18-13 34-44 55z" fill="#fff" stroke="#1d2433" stroke-width="3.5"/><path d="M50 37v28M36 51h28" stroke="#e11d63" stroke-width="10" stroke-linecap="round"/></svg>',
   };
+  Object.assign(ICONS, {
+    jom: '<svg viewBox="0 0 100 100" class="icon"><g stroke="#1d2433" stroke-width="3.5" stroke-linejoin="round"><rect x="24" y="12" width="42" height="60" rx="7" fill="#fff" transform="rotate(-8 45 42)"/></g><text x="44" y="54" text-anchor="middle" font-family="Roboto,Arial,sans-serif" font-size="30" font-weight="900" fill="#ea580c" stroke="#1d2433" stroke-width="2.2" paint-order="stroke">+1</text><polygon points="66,58 80,58 90,68 90,82 80,92 66,92 56,82 56,68" fill="#fff"/><polygon points="67.5,61.5 78.5,61.5 86.5,69.5 86.5,80.5 78.5,88.5 67.5,88.5 59.5,80.5 59.5,69.5" fill="#b91c1c"/><rect x="65" y="73" width="16" height="4" rx="2" fill="#fff"/></svg>',
+    swap: '<svg viewBox="0 0 100 100" class="icon"><g stroke="#1d2433" stroke-width="3" stroke-linejoin="round"><rect x="10" y="24" width="30" height="42" rx="5" fill="#fff" transform="rotate(-10 25 45)"/><rect x="60" y="34" width="30" height="42" rx="5" fill="#fff" transform="rotate(10 75 55)"/></g><path d="M34 18 Q52 4 70 22" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M62 16 L72 24 L60 28Z" fill="#fff"/><path d="M66 84 Q48 98 30 80" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M38 86 L28 78 L40 74Z" fill="#fff"/></svg>',
+    steal: '<svg viewBox="0 0 100 100" class="icon"><path d="M6 40 Q50 22 94 40 L88 64 Q70 74 56 60 Q50 55 44 60 Q30 74 12 64Z" fill="#1d2433" stroke="#fff" stroke-width="3"/><ellipse cx="31" cy="48" rx="9" ry="6" fill="#fde68a"/><ellipse cx="69" cy="48" rx="9" ry="6" fill="#fde68a"/><circle cx="33" cy="48" r="3" fill="#1d2433"/><circle cx="71" cy="48" r="3" fill="#1d2433"/><path d="M6 40 L-2 30 M94 40 L102 30" stroke="#1d2433" stroke-width="5"/></svg>',
+    discard: '<svg viewBox="0 0 100 100" class="icon"><g stroke="#1d2433" stroke-width="3.5" stroke-linejoin="round"><path d="M24 30 H76 L70 90 H30Z" fill="#fff"/><rect x="18" y="20" width="64" height="10" rx="3" fill="#fff"/><rect x="40" y="10" width="20" height="10" rx="3" fill="#fff"/></g><path d="M40 42 V80 M50 42 V80 M60 42 V80" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/></svg>',
+    four: '<svg viewBox="0 0 100 100" class="icon"><g stroke="#1d2433" stroke-width="3" stroke-linejoin="round"><rect x="8" y="30" width="30" height="44" rx="5" fill="#fffaf0" transform="rotate(-24 23 52)"/><rect x="24" y="22" width="30" height="44" rx="5" fill="#fffaf0" transform="rotate(-8 39 44)"/><rect x="46" y="22" width="30" height="44" rx="5" fill="#fffaf0" transform="rotate(8 61 44)"/><rect x="62" y="30" width="30" height="44" rx="5" fill="#fff" transform="rotate(24 77 52)"/></g><text x="50" y="62" text-anchor="middle" font-family="Roboto,Arial,sans-serif" font-size="40" font-weight="900" fill="#65a30d" stroke="#1d2433" stroke-width="2.6" paint-order="stroke">4</text></svg>',
+  });
   const ACT_TEXT = {
     stop: 'STOP<small>Le joueur visé s\'arrête</small>',
     three: 'TROIS À LA SUITE<small>Le joueur visé pioche 3 cartes</small>',
     second: 'SECONDE CHANCE<small>Annule un doublon</small>',
+    jom: 'ENCORE UNE !<small>Le joueur visé pioche 1 carte puis s\'arrête</small>',
+    swap: 'ÉCHANGE<small>Échange 2 cartes entre joueurs</small>',
+    steal: 'VOL<small>Prends une carte d\'un adversaire</small>',
+    discard: 'DÉFAUSSE<small>Retire une carte de la table</small>',
+    four: 'QUATRE À LA SUITE<small>Le joueur visé pioche 4 cartes</small>',
+  };
+  const SPECIAL = {
+    zero: { word: 'MAUDIT', ic: '☠️', tip: '0 point sauf avec 7 numéros · interdit de s\'arrêter' },
+    u7: { word: 'MALCHANCE', ic: '🐈‍⬛', tip: 'Défausse toutes tes autres cartes' },
+    l13: { word: 'BONHEUR', ic: '🍀', tip: 'Autorise un deuxième 13' },
   };
   const SVG_SHIELD = '<svg viewBox="0 0 100 100" class="ev-icon"><path d="M50 6 L86 20 V48 C86 72 70 88 50 95 C30 88 14 72 14 48 V20Z" fill="#22c55e" stroke="#fff" stroke-width="6"/><path d="M32 50 L45 63 L69 38" stroke="#fff" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const SVG_TROPHY = '<svg viewBox="0 0 100 100" class="ev-icon"><path d="M28 12h44v22a22 22 0 0 1-44 0z" fill="#f6c945" stroke="#a16207" stroke-width="4"/><path d="M28 18H14c0 16 8 24 18 24M72 18h14c0 16-8 24-18 24" fill="none" stroke="#a16207" stroke-width="5"/><rect x="44" y="56" width="12" height="16" fill="#e0a526"/><rect x="30" y="72" width="40" height="12" rx="3" fill="#a16207"/><path d="M40 22 v14" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/></svg>';
@@ -116,14 +138,21 @@
     const st = o.w ? `--cw:${o.w}px;` : '';
     const cls = (o.mini ? ' mini' : '') + (o.cls ? ' ' + o.cls : '');
     if (c.t === 'n') {
-      return `<div class="card num${cls}" style="${st}--c:${COLORS[c.v]}" data-id="${c.id}">` +
+      const sp = c.sp && SPECIAL[c.sp];
+      return `<div class="card num${sp ? ' sp sp-' + c.sp : ''}${cls}" style="${st}--c:${COLORS[c.v]}" data-id="${c.id}">` +
         `<div class="ray"></div><div class="frame"></div><div class="gem t"></div>` +
         `<span class="corner tl">${c.v}</span><span class="corner br">${c.v}</span>` +
-        `<div class="big${c.v >= 10 ? ' two' : ''}">${c.v}</div><div class="word">${WORDS[c.v]}</div></div>`;
+        `<div class="big${c.v >= 10 ? ' two' : ''}">${c.v}</div><div class="word">${sp ? sp.word : WORDS[c.v]}</div>` +
+        `${sp ? `<span class="spb">${sp.ic}</span>` : ''}</div>`;
     }
     if (c.t === 'm') {
-      return `<div class="card mod${cls}" style="${st}" data-id="${c.id}"><div class="frame"></div>` +
-        `<div class="big">+${c.v}</div><div class="mod-sub">+${c.v} POINTS</div></div>`;
+      const s = c.v > 0 ? '+' + c.v : '−' + (-c.v);
+      return `<div class="card mod${c.v < 0 ? ' neg' : ''}${cls}" style="${st}" data-id="${c.id}"><div class="frame"></div>` +
+        `<div class="big">${s}</div><div class="mod-sub">${s} POINTS</div></div>`;
+    }
+    if (c.t === 'div') {
+      return `<div class="card mod neg div${cls}" style="${st}" data-id="${c.id}"><div class="frame"></div>` +
+        `<div class="big">÷2</div><div class="mod-sub">SCORE ÷2</div></div>`;
     }
     if (c.t === 'x2') {
       return `<div class="card mod x2${cls}" style="${st}" data-id="${c.id}"><div class="frame"></div>` +
@@ -183,7 +212,9 @@
     if (!p.numbers.length && !p.mods.length) return '';
     let s = p.numbers.map(c => c.v).join('+') || '0';
     if (hasX2(p)) s = `(${s}) ×2`;
-    for (const m of p.mods) if (m.t === 'm') s += ` +${m.v}`;
+    if (hasDiv(p)) s = `(${s}) ÷2`;
+    for (const m of p.mods) if (m.t === 'm') s += m.v > 0 ? ` +${m.v}` : ` −${-m.v}`;
+    if (hasZero(p) && !p.flip7) return s + ' → Zéro maudit = 0';
     if (p.flip7) s += ` +${FLIP7_BONUS}`;
     return s + ` = ${roundScore(p)}`;
   }
@@ -207,7 +238,7 @@
       const turn = G.cur === i && !out && G.phase !== 'end';
       const nums = p.numbers.map(c => mark(c)).join('') + (p.bustCard ? mark(p.bustCard, 'dup') : '');
       const specs = specials(p).map(c => mark(c)).join('') + p.pending.map(c => mark(c, 'pending')).join('');
-      return `<div class="opp${out ? ' is-out' : ''}${p.flip7 ? ' is-seven' : ''}${turn ? ' is-turn' : ''}${p.status === 'busted' ? ' is-bust' : ''}" data-i="${i}" style="--pc:${PCOLOR[p.avatar] || '#fff'}">
+      return `<div class="opp${out ? ' is-out' : ''}${p.flip7 ? ' is-seven' : ''}${turn ? ' is-turn' : ''}${p.status === 'busted' ? ' is-bust' : ''}" data-i="${i}" style="--pc:${pcol(p.avatar)}">
         <div class="opp-ava">${ava(i)}${G.dealer === i ? '<span class="dealer-chip" title="Donneur">D</span>' : ''}</div>
         <div class="opp-main">
           <div class="opp-head"><span class="pname">${p.name}</span><span class="badge ${bc}">${bt}</span>
@@ -219,6 +250,9 @@
 
     // Moi
     const me = G.players[0];
+    $('#meName').textContent = myName();
+    $('#roundMode').textContent = isV() ? 'Vengeance' : '';
+    document.body.classList.toggle('mode-v', isV());
     const zoneW = $('#me').clientWidth || 360;
     const cw = Math.max(34, Math.min(56, Math.floor((zoneW - 22 - 6 * 4) / 7)));
     $('#meNums').style.setProperty('--cw', cw + 'px');
@@ -245,6 +279,7 @@
       const s = roundScore(p);
       const prev = prevScores[i];
       if (prev != null && s > prev) floatScore(i, `+${s - prev}`, 'up');
+      else if (prev != null && s < prev && p.status !== 'busted') floatScore(i, `−${prev - s}`, 'down');
       prevScores[i] = s;
     });
   }
@@ -280,6 +315,12 @@
   function zoneEl(i) { return i === 0 ? $('#me') : $(`.opp[data-i="${i}"]`); }
   function setStatus(html) { $('#status').innerHTML = html; }
   function nameOf(i) { return G.players[i].name; }
+  // Nom affiché (le moteur garde « Toi » pour conjuguer le journal à la 2e personne)
+  function myName() { return (G && G.players[0].display) || settings.name || 'Toi'; }
+  function dispName(i) { return i === 0 ? myName() : G.players[i].name; }
+  const isV = () => G && G.mode === 'vengeance';
+  const mustHit = p => isV() && p.status === 'active' && hasZero(p);
+  const mini = (c, w = 28) => `<span class="tp-card">${cardHTML(c, { w, mini: true })}</span>`;
 
   /* ---------- Bannière d'événement des robots (non bloquante) ---------- */
   let toastTimer = null;
@@ -297,7 +338,7 @@
   /* ================= Boutons PIOCHER / ARRÊTER ================= */
   function setButtons(on) {
     $('#btnHit').disabled = !on;
-    $('#btnStay').disabled = !on;
+    $('#btnStay').disabled = !on || (G && mustHit(G.players[0]));
     $('#deckPile').classList.toggle('glow', on);
     $('#me').classList.toggle('my-turn', on);
   }
@@ -335,7 +376,7 @@
     render();
     const p = G.players[i];
     setStatus(p.human ? 'Tu pioches…' : `<b>${p.name}</b> pioche…`);
-    if (!p.human && !ctx.deal && !ctx.three && Math.random() < .3) say(i, pick(QUIPS.hit));
+    if (!p.human && !ctx.deal && !ctx.n && !ctx.jom && Math.random() < .3) say(i, pick(QUIPS.hit));
     const vw = window.innerWidth, vh = window.innerHeight;
     const W = Math.round(Math.min(200, vw * 0.5, vh * 0.3)), H = Math.round(W * 1.4);
     const left = (vw - W) / 2, topY = (vh - H) / 2 - 24;
@@ -347,7 +388,7 @@
     cap.className = 'fly-cap';
     cap.style.top = (topY + H + 14) + 'px';
     cap.innerHTML = `<span class="cap-ava">${ava(i)}</span><span>${p.human ? 'Tu pioches' : `${p.name} pioche`}` +
-      (ctx.three ? `<small>Trois à la suite · carte ${ctx.three}/3</small>` : ctx.deal ? '<small>Distribution</small>' : '') + '</span>';
+      (ctx.n ? `<small>${ctx.n === 4 ? 'Quatre' : 'Trois'} à la suite · carte ${ctx.k}/${ctx.n}</small>` : ctx.jom ? '<small>Encore une ! · puis stop</small>' : ctx.deal ? '<small>Distribution</small>' : '') + '</span>';
     $('#fxLayer').append(el, cap);
     $('#revealDim').classList.add('on');
 
@@ -359,7 +400,7 @@
       { duration: SPD().fly * 1.1, easing: 'ease-out', fill: 'both' });
     await animDone(a1, SPD().fly);
     guard(t);
-    if (card.t === 'a' || card.t === 'x2') SND.pop();
+    if (card.t === 'a' || card.t === 'x2' || card.t === 'div' || card.sp) SND.pop();
     await wait(SPD().hold);
 
     let zone = document.querySelector(`[data-zone="${i}-${card.t === 'n' ? 'n' : 's'}"]`);
@@ -456,11 +497,21 @@
       });
       return;
     }
+    if (d.kind === 'jom') {
+      await eventPop({
+        theme: 'orange', title: 'STOP FORCÉ !',
+        art: `<div class="art-duo">${ava(0, 'shock', 'big')}<div class="art-card">${cardHTML({ t: 'a', a: 'jom' }, { w: 66 })}</div></div>`,
+        text: 'Après « Encore une ! », tu dois t\'arrêter.<br><small>Tes cartes restent attaquables jusqu\'à la fin de la manche.</small>',
+        extra: scoresBox(me, 'Ton score'),
+      });
+      return;
+    }
     await eventPop({
       theme: 'blue', title: 'TU T\'ARRÊTES !',
       art: `<div class="art-duo">${ava(0, 'happy', 'big')}<div class="art-sign">${SVG_SHIELD}</div></div>`,
-      text: d.kind === 'stay' ? 'Tes points sont à l\'abri pour cette manche.' : 'Tu te donnes la carte STOP : tu gardes tes points.',
-      extra: scoresBox(me, 'Ton score'),
+      text: isV() ? 'Tu ne pioches plus, mais attention :<br><small>tes cartes restent la cible des coups bas jusqu\'à la fin de la manche.</small>'
+        : d.kind === 'stay' ? 'Tes points sont à l\'abri pour cette manche.' : 'Tu te donnes la carte STOP : tu gardes tes points.',
+      extra: scoresBox(me, isV() ? 'Score actuel' : 'Ton score'),
     });
   }
 
@@ -475,20 +526,23 @@
     });
   }
 
-  function askTarget(i, kind, cands) {
+  function askTarget(i, kind, cands, card) {
     const T = {
       stop: ['red', 'STOP !', 'À qui donnes-tu la carte STOP ?<br><small>Il s\'arrête tout de suite et garde ses points.</small>'],
       three: ['purple', '3 À LA SUITE !', 'Choisis un joueur qui piochera 3 cartes.<br><small>Il s\'arrête s\'il fait un doublon.</small>'],
       second: ['pink', 'SECONDE CHANCE', 'Tu en as déjà une : à qui l\'offres-tu ?'],
+      mod: ['red', 'MALUS !', 'À qui donnes-tu ce malus ?<br><small>Il compte à la fin de la manche.</small>'],
+      jom: ['orange', 'ENCORE UNE !', 'Qui doit piocher 1 carte puis s\'arrêter ?<br><small>Même un joueur déjà arrêté.</small>'],
+      four: ['green', '4 À LA SUITE !', 'Choisis un joueur qui piochera 4 cartes.<br><small>Les cartes spéciales sont jouées après, s\'il survit.</small>'],
     }[kind];
-    const card = { t: 'a', a: kind };
+    card = card || { t: 'a', a: kind };
     const tiles = cands.map(j => {
       const p = G.players[j];
-      return `<button class="tile${j === 0 ? ' self' : ''}" data-v="${j}" style="--pc:${PCOLOR[p.avatar]}">
+      return `<button class="tile${j === 0 ? ' self' : ''}" data-v="${j}" style="--pc:${pcol(p.avatar)}">
         <span class="tile-ava">${ava(j)}</span>
-        <span class="tile-name">${j === 0 ? 'Moi' : p.name}</span>
+        <span class="tile-name">${j === 0 ? 'Moi' : p.name}${p.status !== 'active' ? ' <small>(arrêté)</small>' : ''}</span>
         <span class="tile-info">manche ${roundScore(p)} · ${p.total} pts</span>
-        <span class="tile-cards">${p.numbers.map(c => cardHTML(c, { mini: true })).join('') || '<em>aucune carte</em>'}</span>
+        <span class="tile-cards">${[...p.numbers, ...(isV() ? p.mods : [])].map(c => cardHTML(c, { mini: true })).join('') || '<em>aucune carte</em>'}</span>
       </button>`;
     }).join('');
     render();
@@ -498,6 +552,34 @@
       extra: `<div class="tiles n${cands.length}">${tiles}</div>`,
     }).then(Number);
   }
+
+  // Choix d'une carte posée devant un joueur (Vol, Défausse, Échange)
+  function askCard(i, kind, opts, ctx = {}) {
+    const me = G.players[i];
+    const firstCard = ctx.first ? findCard(ctx.first.j, ctx.first.id) : null;
+    const T = {
+      steal: ['slate', 'VOL !', 'Quelle carte veux-tu voler ?<br><small>Un numéro que tu as déjà te ferait sauter (⚠).</small>', 'steal'],
+      discard: ['violet', 'DÉFAUSSE', 'Quelle carte retirer de la table ?<br><small>Tu peux aussi retirer une des tiennes (un malus, le Zéro…).</small>', 'discard'],
+      swap1: ['cyan', 'ÉCHANGE', 'Choisis la <b>1<sup>re</sup> carte</b> à échanger.<br><small>Les deux cartes doivent appartenir à deux joueurs différents.</small>', 'swap'],
+      swap2: ['cyan', 'ÉCHANGE', `Avec quelle carte échanger ${firstCard ? mini(firstCard, 24) : ''} <b>${firstCard ? (dispOwner(ctx.first.j)) : ''}</b> ?`, 'swap'],
+    }[kind];
+    const rows = opts.map(o => {
+      const p = G.players[o.j];
+      const cards = o.cards.map(c => {
+        const risky = kind === 'steal' && c.t === 'n' && P7.isDup(me, c);
+        return `<button class="pick${risky ? ' risky' : ''}" data-v="${o.j}:${c.id}">${cardHTML(c, { w: 38 })}</button>`;
+      }).join('');
+      return `<div class="pick-row" style="--pc:${pcol(p.avatar)}"><span class="pick-who"><span class="pick-ava">${ava(o.j)}</span><b>${o.j === 0 ? 'Moi' : p.name}</b></span><div class="pick-cards">${cards}</div></div>`;
+    }).join('');
+    render();
+    return eventPop({
+      theme: T[0], title: T[1], text: T[2], ok: null,
+      art: `<div class="art-card">${cardHTML({ t: 'a', a: T[3] }, { w: 64 })}</div>`,
+      extra: `<div class="picks">${rows}</div>`,
+    }).then(v => { const [j, id] = String(v).split(':').map(Number); return { j, id }; });
+  }
+  function findCard(j, id) { const p = G.players[j]; return [...p.numbers, ...p.mods].find(c => c.id === id); }
+  function dispOwner(j) { return j === 0 ? '(à toi)' : `(à ${G.players[j].name})`; }
 
   /* ---------- Animation « 7 cartes » ---------- */
   function flip7Anim(i) {
@@ -575,7 +657,7 @@
     const rows = byRound.map(({ p, i }, k) => `
       <div class="rs-row${i === 0 ? ' me' : ''}" style="animation-delay:${0.15 + k * 0.12}s">
         <span class="rs-medal">${MEDAL[k]}</span><span class="rs-ava">${ava(i)}</span>
-        <span class="rs-name">${i === 0 ? 'Toi' : p.name}<span class="bar"><i style="--w:${Math.min(100, p.total / TARGET * 100)}%"></i></span></span>
+        <span class="rs-name">${esc(dispName(i))}<span class="bar"><i style="--w:${Math.min(100, p.total / TARGET * 100)}%"></i></span></span>
         <span class="rs-pts ${p.last > 0 ? 'plus' : 'zero'}">+${p.last}</span><span class="rs-tot">${p.total}</span>
       </div>`).join('');
     const f7 = G.flip7 !== null ? `⭐ ${G.flip7 === 0 ? 'Tu as' : nameOf(G.flip7) + ' a'} réussi 7 numéros !<br>` : '';
@@ -593,8 +675,8 @@
       G.recorded = true;
       const hist = store.get('p7_history', []);
       hist.unshift({
-        date: Date.now(), difficulty: G.difficulty, rounds: G.round,
-        ranking: ranked().map(({ p }) => ({ name: p.name, avatar: p.avatar, total: p.total, human: p.human })),
+        date: Date.now(), difficulty: G.difficulty, mode: G.mode, rounds: G.round,
+        ranking: ranked().map(({ p, i }) => ({ name: dispName(i), avatar: p.avatar, total: p.total, human: p.human })),
         winner: G.players[d.winner].name, humanWon: won,
       });
       store.set('p7_history', hist.slice(0, 30));
@@ -608,7 +690,7 @@
       const mood = k === 0 ? 'excited' : k === rk.length - 1 ? 'sad' : 'happy';
       return `<div class="pod pod-${k + 1}" style="animation-delay:${0.3 + (3 - k) * 0.15}s">
         <div class="pod-ava">${ava(i, mood)}</div>
-        <div class="pod-block"><span class="pod-rank">${k + 1}</span><div class="pod-label"><b>${i === 0 ? 'Toi' : p.name}</b>${p.total} pts</div></div>
+        <div class="pod-block"><span class="pod-rank">${k + 1}</span><div class="pod-label"><b>${esc(dispName(i))}</b>${p.total} pts</div></div>
       </div>`;
     }).join('');
     const w = G.players[d.winner];
@@ -636,16 +718,17 @@
   const ui = {
     save: saveGame,
     async think(i, kind) {
-      setStatus(`<b>${nameOf(i)}</b> ${kind === 'turn' ? 'réfléchit…' : 'choisit un joueur…'}`);
+      setStatus(`<b>${nameOf(i)}</b> ${kind === 'turn' ? 'réfléchit…' : ['steal', 'discard', 'swap'].includes(kind) ? 'choisit une carte…' : 'choisit un joueur…'}`);
       render();
       await wait(kind === 'turn' ? SPD().think : SPD().think * 1.2);
     },
     askChoice() {
       render();
-      setStatus('<b>À toi de jouer !</b><br>Piocher ou arrêter ?');
+      setStatus(mustHit(G.players[0]) ? '<b>Zéro maudit !</b><br>Tu dois continuer à piocher.' : '<b>À toi de jouer !</b><br>Piocher ou arrêter ?');
       return waitUser(done => { humanCb = done; setButtons(true); });
     },
     askTarget,
+    askCard,
     reveal: revealCard,
     async event(type, d) {
       switch (type) {
@@ -655,7 +738,7 @@
         case 'stay':
           render();
           if (d.i === 0) await stopPop({ kind: 'stay' });
-          else { SND.stop(); say(d.i, pick(QUIPS.stay)); setStatus(`${nameOf(d.i)} s'arrête`); await botPop(d.i, 'blue', `${nameOf(d.i)} s'arrête`, `Il garde <b>${roundScore(G.players[d.i])}</b> pts`.replace('Il', G.players[d.i].avatar === 'hugo' ? 'Il' : 'Elle')); }
+          else { SND.stop(); say(d.i, pick(QUIPS.stay)); setStatus(`${nameOf(d.i)} s'arrête`); await botPop(d.i, 'blue', `${nameOf(d.i)} s'arrête`, isV() ? `avec <b>${roundScore(G.players[d.i])}</b> pts (encore attaquable)` : `Il garde <b>${roundScore(G.players[d.i])}</b> pts`.replace('Il', G.players[d.i].avatar === 'hugo' ? 'Il' : 'Elle')); }
           return;
         case 'bust': {
           render();
@@ -709,6 +792,135 @@
             await botPop(d.from, 'purple', '3 À LA SUITE !', d.from === d.to ? `${d.from === 0 ? 'Tu pioches' : nameOf(d.from) + ' pioche'} 3 cartes` : `${d.from === 0 ? 'Tu fais' : nameOf(d.from) + ' fait'} piocher 3 cartes à ${nameOf(d.to)}`);
           }
           return;
+        case 'four':
+          render(); SND.good();
+          if (d.to === 0 && d.from !== 0) {
+            setMood(d.from, 'wink', 3000);
+            await eventPop({
+              theme: 'green', title: '4 À LA SUITE !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.from, 'wink', 'big')}<div class="art-backs four">${backHTML(42)}${backHTML(42)}${backHTML(42)}${backHTML(42)}</div></div>`,
+              text: `<b>${nameOf(d.from)}</b> te fait piocher 4 cartes !<br><small>Les cartes spéciales seront jouées après, si tu survis.</small>`,
+            });
+          } else {
+            if (d.from !== 0 && d.from !== d.to) say(d.from, pick(QUIPS.three));
+            await botPop(d.from, 'green', '4 À LA SUITE !', d.from === d.to ? `${d.from === 0 ? 'Tu pioches' : nameOf(d.from) + ' pioche'} 4 cartes` : `${d.from === 0 ? 'Tu fais' : nameOf(d.from) + ' fait'} piocher 4 cartes à ${nameOf(d.to)}`);
+          }
+          return;
+        case 'jom':
+          render(); SND.stop();
+          if (d.to === 0 && d.from !== 0) {
+            setMood(d.from, 'wink', 3000);
+            await eventPop({
+              theme: 'orange', title: 'ENCORE UNE !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.from, 'wink', 'big')}<div class="art-card">${cardHTML({ t: 'a', a: 'jom' }, { w: 66 })}</div></div>`,
+              text: `<b>${nameOf(d.from)}</b> te fait piocher une carte…<br>puis tu devras t'arrêter !`,
+            });
+          } else {
+            if (d.from !== 0 && d.from !== d.to) say(d.from, pick(QUIPS.mean));
+            await botPop(d.from, 'orange', 'ENCORE UNE !', d.from === d.to
+              ? (d.from === 0 ? 'Tu pioches une carte puis tu t\'arrêtes' : `${nameOf(d.from)} pioche une carte puis s'arrête`)
+              : `${nameOf(d.to)} doit piocher une carte puis s'arrêter`);
+          }
+          return;
+        case 'forcedStay':
+          render();
+          if (d.i === 0) await stopPop({ kind: 'jom' });
+          else { SND.stop(); setMood(d.i, 'shock'); await botPop(d.i, 'orange', `${nameOf(d.i)} doit s'arrêter`, `avec <b>${roundScore(G.players[d.i])}</b> pts pour l'instant`); }
+          return;
+        case 'mod': {
+          render(); SND.bust();
+          const self = d.from === d.to;
+          if (d.to === 0 && d.from !== 0) {
+            setMood(d.from, 'wink', 3000); setMood(0, 'sad');
+            await eventPop({
+              theme: 'red', title: 'MALUS !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.from, 'wink', 'big')}<div class="art-card">${cardHTML(d.card, { w: 66 })}</div></div>`,
+              text: `<b>${nameOf(d.from)}</b> te donne un malus ${d.card.t === 'div' ? '<b>÷2</b> : ton score sera divisé par deux' : `de <b>${-d.card.v}</b> points`} !`,
+              extra: scoresBox(G.players[0], 'Score actuel'),
+            });
+          } else {
+            if (!self && d.from !== 0) say(d.from, pick(QUIPS.mean));
+            if (!self) setMood(d.to, 'sad');
+            await botPop(d.from, 'red', 'MALUS !', `${self ? (d.from === 0 ? 'Tu dois garder' : nameOf(d.from) + ' doit garder') : (d.from === 0 ? 'Tu donnes' : nameOf(d.from) + ' donne')} ${mini(d.card)}${self ? '' : ` à ${nameOf(d.to)}`}`);
+          }
+          return;
+        }
+        case 'steal': {
+          render(); SND.pop();
+          if (d.from === 0) {
+            setMood(d.i, 'wink', 3000); setMood(0, 'shock');
+            await eventPop({
+              theme: 'slate', title: 'AU VOLEUR !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.i, 'wink', 'big')}<div class="art-card">${cardHTML(d.card, { w: 66 })}</div></div>`,
+              text: `<b>${nameOf(d.i)}</b> te vole ${d.card.t === 'n' ? 'ton' : 'ta carte'} <b>${P7.label(d.card)}</b> !`,
+            });
+          } else {
+            if (d.i !== 0) say(d.i, pick(QUIPS.steal));
+            await botPop(d.i, 'slate', 'VOL !', `${d.i === 0 ? 'Tu voles' : nameOf(d.i) + ' vole'} ${mini(d.card)} à ${nameOf(d.from)}`);
+          }
+          return;
+        }
+        case 'discard': {
+          render(); SND.place();
+          const own = d.i === d.from;
+          if (d.from === 0 && d.i !== 0) {
+            setMood(d.i, 'wink', 3000);
+            await eventPop({
+              theme: 'violet', title: 'DÉFAUSSE !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.i, 'wink', 'big')}<div class="art-card">${cardHTML(d.card, { w: 66 })}</div></div>`,
+              text: `<b>${nameOf(d.i)}</b> défausse ${d.card.t === 'n' ? 'ton' : 'ta carte'} <b>${P7.label(d.card)}</b> !`,
+            });
+          } else {
+            await botPop(d.i, 'violet', 'DÉFAUSSE !', `${d.i === 0 ? 'Tu défausses' : nameOf(d.i) + ' défausse'} ${mini(d.card)}${own ? (d.i === 0 ? ' (la tienne)' : ' (la sienne)') : ` de ${nameOf(d.from)}`}`);
+          }
+          return;
+        }
+        case 'swap': {
+          render(); SND.good();
+          const meIn = (d.a.j === 0 || d.b.j === 0) && d.i !== 0;
+          const txt = `${mini(d.a.card)} ${d.a.j === 0 ? '(toi)' : '(' + nameOf(d.a.j) + ')'} ⇄ ${mini(d.b.card)} ${d.b.j === 0 ? '(toi)' : '(' + nameOf(d.b.j) + ')'}`;
+          if (meIn) {
+            setMood(d.i, 'wink', 3000);
+            await eventPop({
+              theme: 'cyan', title: 'ÉCHANGE !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(d.i, 'wink', 'big')}<div class="art-cards">${cardHTML(d.a.card, { w: 56 })}${cardHTML(d.b.card, { w: 56 })}</div></div>`,
+              text: `<b>${nameOf(d.i)}</b> échange des cartes :<br>${txt}`,
+            });
+          } else {
+            await botPop(d.i, 'cyan', 'ÉCHANGE !', txt);
+          }
+          return;
+        }
+        case 'u7':
+          render(); SND.bust();
+          if (d.i === 0) {
+            setMood(0, 'shock');
+            await eventPop({
+              theme: 'slate', title: 'MALCHANCE !', auto: SPD().auto,
+              art: `<div class="art-duo">${ava(0, 'shock', 'big')}<div class="art-card">${cardHTML(d.card, { w: 66 })}</div></div>`,
+              text: d.lost ? `Le <b>7 de la malchance</b> défausse tes ${d.lost} autres cartes.<br><small>Tu repars de zéro, mais tu restes en jeu.</small>` : 'Le <b>7 de la malchance</b> arrive… et tu n\'avais rien à perdre !',
+            });
+          } else { setMood(d.i, 'shock'); await botPop(d.i, 'slate', 'MALCHANCE !', `${nameOf(d.i)} perd ses ${d.lost} autres cartes`); }
+          return;
+        case 'lucky':
+          render(); SND.good();
+          if (d.i !== 0) say(d.i, pick(QUIPS.saved));
+          await botPop(d.i, 'green', '13 PORTE-BONHEUR !', `${d.i === 0 ? 'Tu gardes' : nameOf(d.i) + ' garde'} deux 13 sans sauter`);
+          return;
+        case 'zero':
+          render(); SND.stop();
+          if (d.i === 0 && G.players[0].status === 'active') {
+            await eventPop({
+              theme: 'slate', title: 'ZÉRO MAUDIT !', auto: SPD().auto + 600,
+              art: `<div class="art-duo">${ava(0, 'shock', 'big')}<div class="art-card">${cardHTML(d.card, { w: 66 })}</div></div>`,
+              text: 'Ton score de manche vaut <b>0</b>, sauf si tu alignes 7 numéros.<br><small>Tant que tu l\'as, tu ne peux pas t\'arrêter !</small>',
+            });
+          } else await botPop(d.i, 'slate', 'ZÉRO MAUDIT !', `${d.i === 0 ? 'Ton score vaut' : 'Le score de ' + nameOf(d.i) + ' vaut'} 0 sauf avec 7 numéros`);
+          return;
+        case 'noTarget':
+          render();
+          await botPop(d.i, 'slate', P7.label(d.card), 'Aucune carte à viser : défaussée');
+          return;
         case 'flip7': render(); if (d.i !== 0) say(d.i, pick(QUIPS.seven)); await flip7Anim(d.i); return;
         case 'roundEnd': render(); setStatus('Fin de la manche'); await roundSummary(d); return;
         case 'gameover': render(); await gameOver(d); return;
@@ -726,14 +938,18 @@
     cancelAll();
     G = state;
     G.difficulty = G.difficulty || settings.difficulty;
+    G.mode = G.mode || 'normal';
     for (const p of G.players) p.avatar = LEGACY[p.avatar] || p.avatar;
+    // Le profil (nom, avatar) s'applique aussi à une partie reprise
+    G.players[0].avatar = settings.avatar;
+    G.players[0].display = settings.name || '';
     lastMeTotal = null; prevScores = []; shownMeRound = 0;
     hideHome();
     render();
     const engine = new P7.Engine(G, ui);
     engine.run().catch(e => { if (!(e instanceof Cancel)) { console.error(e); botPop(null, 'red', 'Erreur', e.message); } });
   }
-  function newGame() { startGame(P7.newGame(settings.difficulty, BOTS)); }
+  function newGame() { startGame(P7.newGame(settings.difficulty, BOTS, settings.mode, { name: settings.name, avatar: settings.avatar })); }
   function resumeGame() {
     const s = loadSave();
     if (!s) return newGame();
@@ -749,9 +965,17 @@
     closeMenu();
     $('#btnResume').hidden = !loadSave();
     $('#home').classList.remove('hide');
-    const sample = [{ t: 'n', v: 3 }, { t: 'a', a: 'second' }, { t: 'n', v: 12 }, { t: 'n', v: 7 }, { t: 'x2' }, { t: 'a', a: 'stop' }, { t: 'n', v: 9 }];
+    renderHome();
+  }
+  function renderHome() {
+    const sample = settings.mode === 'vengeance'
+      ? [{ t: 'n', v: 13, sp: 'l13' }, { t: 'a', a: 'steal' }, { t: 'm', v: -6 }, { t: 'n', v: 7, sp: 'u7' }, { t: 'div' }, { t: 'a', a: 'swap' }, { t: 'n', v: 0, sp: 'zero' }]
+      : [{ t: 'n', v: 3 }, { t: 'a', a: 'second' }, { t: 'n', v: 12 }, { t: 'n', v: 7 }, { t: 'x2' }, { t: 'a', a: 'stop' }, { t: 'n', v: 9 }];
     $('#homeFan').innerHTML = sample.map((c, k) => placed(cardHTML(c), `transform:translateX(-50%) rotate(${(k - 3) * 12}deg);animation-delay:${k * 0.07}s;`)).join('');
-    $('#homeCrew').innerHTML = BOTS.map((b, k) => `<div class="crew" style="animation-delay:${k * 0.25}s;--pc:${PCOLOR[b.avatar]}">${avatarSVG(b.avatar, k === 1 ? 'wink' : 'happy')}<span>${b.name}</span></div>`).join('');
+    const crew = [{ name: settings.name || 'Toi', avatar: settings.avatar, me: true }].concat(BOTS);
+    $('#homeCrew').innerHTML = crew.map((b, k) => `<div class="crew${b.me ? ' crew-me' : ''}"${b.me ? ' data-profile="1"' : ''} style="animation-delay:${k * 0.25}s;--pc:${pcol(b.avatar)}">${avatarSVG(b.avatar, k === 2 ? 'wink' : 'happy')}<span>${esc(b.name)}</span>${b.me ? '<i class="crew-edit">✎</i>' : ''}</div>`).join('');
+    $('.home-title').classList.toggle('v', settings.mode === 'vengeance');
+    $('#homeMode').hidden = settings.mode !== 'vengeance';
     syncSegs();
   }
   function hideHome() { $('#home').classList.add('hide'); }
@@ -762,7 +986,13 @@
   function syncSegs() {
     $$('[data-diff]').forEach(b => b.classList.toggle('on', b.dataset.diff === settings.difficulty));
     $$('[data-speed]').forEach(b => b.classList.toggle('on', b.dataset.speed === settings.speed));
+    $$('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === settings.mode));
     $('#soundItem').textContent = settings.sound ? '🔊 Son : activé' : '🔇 Son : coupé';
+    $('#profileAva').innerHTML = avatarSVG(settings.avatar, 'happy');
+    $('#profileName').textContent = settings.name || 'Toi';
+    const live = G && !G.over && G.mode !== settings.mode;
+    $('#modeNote').hidden = !live;
+    if (live) $('#modeNote').textContent = `Partie en cours : ${MODES[G.mode]}. La version ${MODES[settings.mode]} s'appliquera à la prochaine partie.`;
   }
   $('#btnMenu').addEventListener('click', openMenu);
   $('#drawerBack').addEventListener('click', closeMenu);
@@ -772,6 +1002,48 @@
     syncSegs();
   }));
   $$('[data-speed]').forEach(b => b.addEventListener('click', () => { settings.speed = b.dataset.speed; saveSettings(); syncSegs(); }));
+  $$('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    if (settings.mode === b.dataset.mode) return;
+    settings.mode = b.dataset.mode; saveSettings();
+    SND.click();
+    if (!G) { renderHome(); return; }
+    syncSegs();
+    if (!G.over && G.mode !== settings.mode) {
+      showPanel(`<h2>Version ${MODES[settings.mode]}</h2><p class="ov-sub" style="text-align:center">La partie en cours se joue en version <b>${MODES[G.mode]}</b>.<br>Veux-tu commencer une nouvelle partie en version <b>${MODES[settings.mode]}</b> ?</p>
+        <button class="ov-btn danger" data-p="yes">Oui, nouvelle partie</button>`, a => {
+        if (a === 'yes') { closePanel(); closeMenu(); newGame(); }
+      });
+    }
+  }));
+
+  /* ---------- Profil : nom et avatar ---------- */
+  function openProfile() {
+    let pickAva = settings.avatar;
+    const grid = () => PLAYER_CHOICES.map(k => `<button class="ava-pick${k === pickAva ? ' on' : ''}" data-p="ava:${k}" style="--pc:${pcol(k)}" aria-label="Avatar ${k}">${avatarSVG(k, k === pickAva ? 'excited' : 'happy')}</button>`).join('');
+    showPanel(`<h2>Mon profil</h2>
+      <div class="prof-preview" id="profPrev">${avatarSVG(pickAva, 'excited')}</div>
+      <label class="prof-label" for="profName">Ton nom</label>
+      <input id="profName" class="prof-input" maxlength="12" autocomplete="off" placeholder="Toi" value="${esc(settings.name)}">
+      <div class="prof-label">Ton avatar</div>
+      <div class="ava-grid" id="avaGrid">${grid()}</div>
+      <button class="ov-btn" data-p="save">Enregistrer</button>`, a => {
+      if (a.startsWith('ava:')) {
+        pickAva = a.slice(4); SND.pop();
+        panel.querySelector('#avaGrid').innerHTML = grid();
+        panel.querySelector('#profPrev').innerHTML = avatarSVG(pickAva, 'excited');
+        return;
+      }
+      if (a === 'save') {
+        settings.name = panel.querySelector('#profName').value.trim().replace(/\s+/g, ' ').slice(0, 12);
+        settings.avatar = pickAva;
+        saveSettings(); SND.good();
+        if (G) { G.players[0].avatar = settings.avatar; G.players[0].display = settings.name; saveGame(); render(); }
+        closePanel(); syncSegs();
+        if (!G) renderHome();
+      }
+    });
+  }
+  $('#homeCrew').addEventListener('click', e => { if (e.target.closest('[data-profile]')) openProfile(); });
 
   // Panneau par-dessus tout (journal, historique, règles, confirmations)
   const panel = document.createElement('div');
@@ -798,14 +1070,18 @@
     [/^Toi s'arrête/, 'Tu t\'arrêtes'], [/^Toi utilise sa/, 'Tu utilises ta'], [/^Toi a déjà/, 'Tu as déjà'],
     [/^Toi impose/, 'Tu imposes'], [/^Toi garde (.*) pour lui-même/, 'Tu gardes $1 pour toi'],
     [/^⭐ Toi réussit/, '⭐ Tu réussis'], [/: Toi perd/, ': tu perds'], [/^🏆 Toi gagne/, '🏆 Tu gagnes'],
-    [/ à Toi([ ,.])/g, ' à toi$1'],
+    [/^Toi vole/, 'Tu voles'], [/^Toi échange/, 'Tu échanges'], [/^Toi fait défausser/, 'Tu fais défausser'],
+    [/^Toi défausse son propre/, 'Tu défausses ton propre'], [/^Toi doit garder/, 'Tu dois garder'],
+    [/^Toi doit s'arrêter/, 'Tu dois t\'arrêter'], [/^Toi reçoit le 7 de la malchance : toutes ses/, 'Tu reçois le 7 de la malchance : toutes tes'],
+    [/^Toi reçoit/, 'Tu reçois'], [/^Toi garde deux/, 'Tu gardes deux'], [/^Toi se donne ENCORE/, 'Tu te donnes ENCORE'],
+    [/\(Toi\)/g, '(toi)'], [/ à Toi([ ,.])/g, ' à toi$1'],
   ];
   const tu = m => TU.reduce((s, [re, r]) => s.replace(re, r), m);
 
   const ACTIONS = {
     closeMenu,
     newGame() {
-      showPanel(`<h2>Nouvelle partie ?</h2><p class="ov-sub" style="text-align:center">La partie en cours sera abandonnée.<br>Robots : <b>${DIFF[settings.difficulty]}</b></p>
+      showPanel(`<h2>Nouvelle partie ?</h2><p class="ov-sub" style="text-align:center">La partie en cours sera abandonnée.<br>Version : <b>${MODES[settings.mode]}</b> · Robots : <b>${DIFF[settings.difficulty]}</b></p>
         <button class="ov-btn danger" data-p="yes">Oui, recommencer</button>`, a => {
         if (a === 'yes') { closePanel(); closeMenu(); newGame(); }
       });
@@ -826,21 +1102,50 @@
       const wins = h.filter(x => x.humanWon).length;
       const body = h.length ? `<p class="ov-sub" style="text-align:center">${h.length} partie${h.length > 1 ? 's' : ''} · ${wins} victoire${wins > 1 ? 's' : ''}</p>` + h.map(x => `
         <div class="hist-item"><b>${x.humanWon ? '🏆 Victoire' : '❌ ' + esc(x.winner) + ' gagne'}</b> · ${new Date(x.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}<br>
-        ${DIFF[x.difficulty] || ''} · ${x.rounds} manches
-        <div class="hist-rk">${x.ranking.map(r => `<span>${avatarSVG(LEGACY[r.avatar] || r.avatar, 'neutral')}${r.human ? 'Toi' : esc(r.name)} <b>${r.total}</b></span>`).join('')}</div></div>`).join('')
+        ${MODES[x.mode || 'normal']} · ${DIFF[x.difficulty] || ''} · ${x.rounds} manches
+        <div class="hist-rk">${x.ranking.map(r => `<span>${avatarSVG(LEGACY[r.avatar] || r.avatar, 'neutral')}${esc(r.name)} <b>${r.total}</b></span>`).join('')}</div></div>`).join('')
         + '<button class="ov-btn danger" data-p="clear">Effacer l\'historique</button>'
         : '<p class="ov-sub" style="text-align:center">Aucune partie terminée pour le moment.</p>';
       showPanel(`<h2>Dernières parties</h2>${body}`, a => {
         if (a === 'clear') { store.del('p7_history'); ACTIONS.history(); }
       });
     },
-    rules() { showPanel(RULES); },
+    rules(m) {
+      const v = (typeof m === 'string' ? m : settings.mode) === 'vengeance';
+      showPanel(`<h2>Règles du jeu</h2><div class="seg rule-tabs"><button class="${v ? '' : 'on'}" data-p="r:normal">Normale</button><button class="${v ? 'on' : ''}" data-p="r:vengeance">Vengeance</button></div>` +
+        (v ? RULES_V : RULES), a => { if (a.startsWith('r:')) { ACTIONS.rules(a.slice(2)); panel.querySelector('.ov-box').scrollTop = 0; } });
+    },
+    profile: openProfile,
     home() { closeMenu(); showHome(); },
   };
   $$('[data-act]').forEach(b => b.addEventListener('click', () => ACTIONS[b.dataset.act]()));
 
   const ex = (c, w) => cardHTML(c, { w: w || 44 });
-  const RULES = `<h2>Règles du jeu</h2><div class="rules">
+  const RULES_V = `<div class="rules rules-v"><h3 class="rv-title">😈 Version Vengeance (108 cartes)</h3>
+    <p>Même principe : piocher ou s'arrêter, un doublon = 0 point, 7 numéros = fin de manche et <b>+${FLIP7_BONUS}</b>, premier à ${TARGET} points. Les bonus disparaissent au profit des malus et des coups bas.</p>
+    <h3>S'arrêter ne protège plus</h3><p>Quand tu t'arrêtes, tu ne pioches plus, mais tes cartes restent sur la table : les autres peuvent encore te viser jusqu'à la fin de la manche. Les points ne comptent qu'à la fin. Seul un joueur éliminé ne peut plus être visé.</p>
+    <h3>Numéros 0 à 13</h3>
+    <div class="rcards">${ex({ t: 'n', v: 0, sp: 'zero' })}${ex({ t: 'n', v: 7, sp: 'u7' })}${ex({ t: 'n', v: 13, sp: 'l13' })}</div>
+    <ul><li>Autant d'exemplaires que la valeur, jusqu'à treize 13.</li>
+    <li><b>Zéro maudit</b> ☠️ : ton score de manche vaut 0, sauf si tu alignes 7 numéros. Tant que tu l'as, tu ne peux pas t'arrêter.</li>
+    <li><b>7 de la malchance</b> 🐈‍⬛ (un des sept 7) : quand tu le reçois, toutes tes autres cartes (numéros et malus) sont défaussées. Il ne te fait jamais sauter, mais un autre 7 ensuite oui.</li>
+    <li><b>13 porte-bonheur</b> 🍀 (un des treize 13) : tu peux avoir deux 13 sans sauter ; les deux comptent. Un troisième 13 te fait sauter.</li></ul>
+    <h3>Malus</h3>
+    <div class="rcards">${ex({ t: 'm', v: -4 })}${ex({ t: 'm', v: -10 })}${ex({ t: 'div' })}</div>
+    <p>−2, −4, −6, −8, −10 et ÷2 : quand tu en pioches un, tu le donnes à un joueur non éliminé (à toi seulement si personne d'autre). Il ne compte pas comme numéro.</p>
+    <h3>Cartes action (2 de chaque)</h3>
+    <div class="rcards">${ex({ t: 'a', a: 'jom' }, 60)}${ex({ t: 'a', a: 'four' }, 60)}${ex({ t: 'a', a: 'steal' }, 60)}${ex({ t: 'a', a: 'swap' }, 60)}${ex({ t: 'a', a: 'discard' }, 60)}</div>
+    <ul><li><b>ENCORE UNE !</b> : le joueur visé (toi compris, même arrêté) pioche 1 carte, puis doit s'arrêter.</li>
+    <li><b>QUATRE À LA SUITE</b> : le joueur visé pioche 4 cartes. Les actions et malus piochés sont joués après, dans l'ordre, s'il n'a pas sauté. S'il saute ou fait 7 numéros, ils sont perdus.</li>
+    <li><b>VOL</b> : prends une carte (numéro ou malus) devant un adversaire. Si c'est un numéro que tu as déjà, tu sautes.</li>
+    <li><b>ÉCHANGE</b> : échange deux cartes appartenant à deux joueurs différents (une des tiennes ou deux chez les autres). Un doublon créé fait sauter le joueur concerné.</li>
+    <li><b>DÉFAUSSE</b> : retire une carte de la table, chez n'importe quel joueur non éliminé, toi compris.</li>
+    <li>Une action sans cible possible est défaussée sans effet.</li></ul>
+    <h3>Score de la manche</h3>
+    <p>Somme des numéros → ÷2 (arrondi en dessous) → − les malus → jamais moins de 0 → <b>+${FLIP7_BONUS}</b> pour 7 numéros.</p>
+  </div>`;
+  const RULES = `<div class="rules">
+    <h3 class="rv-title">🃏 Version normale (94 cartes)</h3>
     <h3>But</h3><p>Être le premier à dépasser <b>${TARGET} points</b>. La partie s'arrête à la fin de la manche où un joueur atteint ${TARGET} ; le plus haut total gagne.</p>
     <h3>Déroulement d'une manche</h3>
     <ul><li>Le donneur distribue une carte face visible à chaque joueur.</li>

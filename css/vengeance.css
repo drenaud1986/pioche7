@@ -1,0 +1,128 @@
+/* Pioche 7 — version Vengeance (nouvelles cartes, choix de carte) et profil du joueur */
+
+/* ---------- Nouvelles cartes action ---------- */
+.card.act.jom { background: radial-gradient(circle at 50% 30%, #ffc078, #fb923c 45%, #c2410c); }
+.card.act.swap { background: radial-gradient(circle at 50% 30%, #8cf3ff, #22d3ee 45%, #0e7490); }
+.card.act.steal { background: radial-gradient(circle at 50% 30%, #a5b4c8, #64748b 45%, #1e293b); }
+.card.act.discard { background: radial-gradient(circle at 50% 30%, #d8b4fe, #a855f7 45%, #6b21a8); }
+.card.act.four { background: radial-gradient(circle at 50% 30%, #e2ff8a, #a3e635 45%, #4d7c0f); }
+
+/* ---------- Malus ---------- */
+.card.mod.neg {
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,.08) 0 .6em, transparent .6em 1.2em),
+    linear-gradient(165deg, #fb7185, #e11d48 55%, #881337);
+}
+.card.mod.neg .big { color: #fff1f2; -webkit-text-stroke-color: #4c0519; text-shadow: .05em .06em 0 #4c0519; }
+.card.mod.neg .mod-sub { color: #881337; background: #ffe4e6; }
+.card.mod.div {
+  background:
+    repeating-linear-gradient(-45deg, rgba(0,0,0,.1) 0 .6em, transparent .6em 1.2em),
+    linear-gradient(165deg, #a78bfa, #6d28d9 55%, #2e1065);
+}
+.card.mod.div .big { font-size: 6em; -webkit-text-stroke-color: #1e1b4b; text-shadow: .05em .06em 0 #1e1b4b; }
+.card.mod.div .mod-sub { color: #4c1d95; background: #ede9fe; }
+
+/* ---------- Numéros spéciaux ---------- */
+.card.num.sp .spb {
+  position: absolute; top: .35em; right: .45em; font-size: 2.4em; line-height: 1;
+  filter: drop-shadow(0 .05em .05em rgba(0,0,0,.4));
+}
+.card.mini.num.sp .spb { font-size: 3.6em; top: .1em; right: .15em; }
+.card.num.sp-zero { background: radial-gradient(circle at 50% 46%, #f5f0ff 0 38%, transparent 39%), linear-gradient(160deg, #d6ccf0, #9d8cc9); }
+.card.num.sp-zero .word { background: #3b0764; }
+.card.num.sp-u7 { background: radial-gradient(circle at 50% 46%, #f1f5f9 0 38%, transparent 39%), linear-gradient(160deg, #cbd5e1, #64748b); }
+.card.num.sp-u7 .word { background: #0f172a; font-size: .95em; }
+.card.num.sp-l13 { background: radial-gradient(circle at 50% 46%, #f0fdf4 0 38%, transparent 39%), linear-gradient(160deg, #bbf7d0, #4ade80); }
+.card.num.sp-l13 .word { background: #14532d; }
+.card.num.sp::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 .3em rgba(255,255,255,.55);
+}
+
+/* ---------- Pop-ups et toasts : nouveaux thèmes ---------- */
+.ev-orange { --c1: #fdba74; --c2: #ea580c; --c3: #5a1a03; }
+.ev-green { --c1: #bef264; --c2: #65a30d; --c3: #1a2e05; }
+.ev-slate { --c1: #94a3b8; --c2: #475569; --c3: #0b1220; }
+.ev-violet { --c1: #d8b4fe; --c2: #9333ea; --c3: #2e1065; }
+.ev-cyan { --c1: #67e8f9; --c2: #0891b2; --c3: #083344; }
+.toast.tp-orange { background: linear-gradient(180deg, #f97316, #9a3412); }
+.toast.tp-green { background: linear-gradient(180deg, #65a30d, #1a2e05); }
+.toast.tp-slate { background: linear-gradient(180deg, #475569, #0f172a); }
+.toast.tp-violet { background: linear-gradient(180deg, #9333ea, #4c1d95); }
+.toast.tp-cyan { background: linear-gradient(180deg, #0891b2, #164e63); }
+.tp-card { display: inline-flex; vertical-align: middle; margin: -4px 2px 0; }
+.tp-card .card { box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+.art-backs.four .card:nth-child(1) { transform: rotate(-22deg) translateY(10px); }
+.art-backs.four .card:nth-child(2) { transform: rotate(-7deg) translateY(-2px); }
+.art-backs.four .card:nth-child(3) { transform: rotate(7deg) translateY(-2px); }
+.art-backs.four .card:nth-child(4) { transform: rotate(22deg) translateY(10px); }
+.tile-name small { font-size: 11px; color: #6b7280; font-weight: 700; }
+
+/* ---------- Choix d'une carte (Vol, Défausse, Échange) ---------- */
+.picks {
+  display: flex; flex-direction: column; gap: 6px; margin: 0 2px 2px;
+  max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.pick-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 14px;
+  background: linear-gradient(180deg, #fffaf0, #f3e6c6); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.22);
+  animation: popIn .3s both; text-align: left;
+}
+.pick-who { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 52px; flex: none; color: var(--ink); font-size: 12px; }
+.pick-ava { width: 38px; height: 38px; border-radius: 50%; padding: 2px; background: var(--pc); }
+.pick-ava .avatar { width: 100%; height: 100%; }
+.pick-cards { display: flex; flex-wrap: wrap; gap: 5px; }
+.pick { position: relative; padding: 0; border: 0; background: none; border-radius: 6px; transition: transform .1s; }
+.pick .card { box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.pick:active { transform: translateY(3px) scale(.95); }
+.pick.risky::after {
+  content: "⚠"; position: absolute; right: -4px; top: -6px; width: 18px; height: 18px; border-radius: 50%;
+  background: #dc2626; color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 900;
+}
+
+/* ---------- Mode Vengeance : touches visuelles ---------- */
+.rc-mode:not(:empty) { margin-left: 6px; padding-left: 6px; border-left: 1px solid rgba(255,255,255,.3); color: #fca5a5; }
+body.mode-v .round-chip { border-color: #f87171; }
+body.mode-v .brand span { background: #dc2626; color: #fff; }
+.home-mode {
+  margin: 2px 0 6px; padding: 4px 14px; border-radius: 99px; font-weight: 900; font-size: 13px; letter-spacing: 3px;
+  color: #fff; background: linear-gradient(180deg, #ef4444, #7f1d1d); border: 2px solid #fecaca;
+  box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 18px rgba(239, 68, 68, .45); animation: popIn .4s both;
+}
+.home-title.v span { background: #dc2626; color: #fff; }
+.seg-mode button[data-mode="vengeance"].on { background: linear-gradient(180deg, #f87171, #dc2626); color: #fff; box-shadow: 0 2px 0 #7f1d1d; }
+.mode-note { margin-top: 6px; font-size: 12px; line-height: 1.35; color: #fecaca; }
+.rule-tabs { margin: 0 0 10px; }
+.rules .rv-title { font-size: 17px; margin-top: 4px; }
+
+/* ---------- Profil ---------- */
+.dr-profile { display: flex; align-items: center; gap: 10px; }
+.dp-ava { width: 42px; height: 42px; flex: none; }
+.dp-ava .avatar { width: 100%; height: 100%; border: 2px solid var(--gold); border-radius: 50%; }
+.dp-txt { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.dp-txt small { font-size: 11px; color: var(--text-dim); font-weight: 700; }
+.dp-txt b { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-edit { margin-left: auto; font-size: 12px; color: var(--gold); font-weight: 800; }
+.prof-preview { width: 96px; height: 96px; margin: 0 auto 8px; animation: popIn .3s both; }
+.prof-preview .avatar { width: 100%; height: 100%; border: 4px solid #fff; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.prof-label { display: block; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; margin: 8px 0 4px; }
+.prof-input {
+  width: 100%; box-sizing: border-box; padding: 11px 14px; border-radius: 12px; border: 2px solid #d1d5db;
+  font: inherit; font-size: 17px; font-weight: 800; color: var(--ink); background: #fff;
+}
+.prof-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+.ava-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.ava-pick {
+  aspect-ratio: 1; padding: 4px; border-radius: 50%; border: 3px solid transparent; background: rgba(0,0,0,.06);
+  transition: transform .12s;
+}
+.ava-pick .avatar { width: 100%; height: 100%; }
+.ava-pick.on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 25%, #fff); transform: scale(1.06); box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+.ava-pick:active { transform: scale(.94); }
+.crew-me { position: relative; cursor: pointer; }
+.crew-edit {
+  position: absolute; top: -2px; right: -4px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold); color: var(--ink); font-style: normal; font-size: 13px; line-height: 22px; text-align: center;
+  box-shadow: 0 2px 0 rgba(0,0,0,.35);
+}

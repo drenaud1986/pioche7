@@ -14,6 +14,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/vengeance.css">
 </head>
 <body>
   <div id="app">
@@ -28,7 +29,7 @@
     <section id="opponents"></section>
 
     <section id="table">
-      <div class="round-chip">Manche <b id="roundNo">1</b></div>
+      <div class="round-chip">Manche <b id="roundNo">1</b><span id="roundMode" class="rc-mode"></span></div>
       <div class="felt-sparkles"></div>
       <div class="pile" id="deckPile">
         <div class="stack"></div>
@@ -46,7 +47,7 @@
     <section id="me" class="me-zone" data-i="0">
       <div class="me-head">
         <div id="meAva" class="me-ava"></div>
-        <span class="pname">Toi</span>
+        <span class="pname" id="meName">Toi</span>
         <span id="meBadge" class="badge"></span>
         <div class="me-scores">
           <div class="sc"><small>MANCHE</small><b id="meRound">0</b></div>
@@ -81,6 +82,14 @@
       </div>
       <button class="dr-item" data-act="closeMenu">▶️ Reprendre le jeu</button>
       <button class="dr-item" data-act="newGame">🔄 Nouvelle partie</button>
+      <button class="dr-item dr-profile" data-act="profile"><span class="dp-ava" id="profileAva"></span><span class="dp-txt"><small>Mon profil</small><b id="profileName">Toi</b></span><span class="dp-edit">Modifier ✎</span></button>
+      <div class="dr-group">
+        <div class="dr-label">Version</div>
+        <div class="seg seg-mode">
+          <button data-mode="normal">Normale</button><button data-mode="vengeance">😈 Vengeance</button>
+        </div>
+        <div class="mode-note" id="modeNote" hidden></div>
+      </div>
       <div class="dr-group">
         <div class="dr-label">Niveau des robots</div>
         <div class="seg" id="segDiff">
@@ -106,10 +115,15 @@
       <div class="home-inner">
         <div class="home-fan" id="homeFan"></div>
         <h1 class="home-title">PIOCHE<span>7</span></h1>
+        <div class="home-mode" id="homeMode" hidden>SOIF DE VENGEANCE</div>
         <div class="home-crew" id="homeCrew"></div>
         <p class="home-tag">Stop ou encore ? Aligne 7 numéros différents sans doublon !</p>
         <div class="home-box">
-          <div class="dr-label">Niveau des robots</div>
+          <div class="dr-label">Version</div>
+          <div class="seg big seg-mode">
+            <button data-mode="normal">🃏<br>Normale</button><button data-mode="vengeance">😈<br>Vengeance</button>
+          </div>
+          <div class="dr-label" style="margin-top:10px">Niveau des robots</div>
           <div class="seg big" id="homeDiff">
             <button data-diff="facile">😊<br>Facile</button><button data-diff="moyen">🙂<br>Moyen</button><button data-diff="difficile">😈<br>Difficile</button>
           </div>
